@@ -68,9 +68,37 @@ Jab user kisi bhi hardware (Arduino Uno/Nano/Mega, ESP32, ESP8266, Raspberry Pi 
         return sb.toString()
     }
 
+    private var groqModelCache: String? = null
+
+    /** Groq se pucho ki is account par kaunse models chalte hain, phir sabse achha chuno. */
+    private fun pickGroqModel(key: String): String {
+        groqModelCache?.let { return it }
+        return try {
+            val c = URL("https://api.groq.com/openai/v1/models").openConnection() as HttpURLConnection
+            c.connectTimeout = 15000
+            c.readTimeout = 30000
+            c.setRequestProperty("Authorization", "Bearer $key")
+            c.setRequestProperty("User-Agent", "HardwareStudio/1.0")
+            val text = c.inputStream.bufferedReader().use { it.readText() }
+            val arr = JSONObject(text).getJSONArray("data")
+            val ids = (0 until arr.length()).map { arr.getJSONObject(it).getString("id") }
+            val prefer = listOf(
+                "openai/gpt-oss-120b", "llama-3.3-70b-versatile",
+                "openai/gpt-oss-20b", "llama-3.1-8b-instant"
+            )
+            val pick = prefer.firstOrNull { it in ids }
+                ?: ids.firstOrNull { !it.contains("whisper") && !it.contains("orpheus") && !it.contains("guard") && !it.contains("tts") }
+                ?: GROQ_DEFAULT_MODEL
+            groqModelCache = pick
+            pick
+        } catch (e: Exception) {
+            GROQ_DEFAULT_MODEL
+        }
+    }
+
     private fun askGroq(key: String, model: String, history: List<Pair<String, String>>, system: String): String {
         // Settings me abhi Claude ka naam ho to Groq ka model use karo
-        val m = if (model.isBlank() || model.startsWith("claude")) GROQ_DEFAULT_MODEL else model
+        val m = if (model.isBlank() || model.startsWith("claude")) pickGroqModel(key) else model
         val msgs = JSONArray()
         msgs.put(JSONObject().put("role", "system").put("content", system))
         for ((role, text) in history) msgs.put(JSONObject().put("role", role).put("content", text))
