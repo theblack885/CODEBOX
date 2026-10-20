@@ -1,0 +1,42 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.9"
+
+      - name: Install arduino-cli
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | BINDIR=/usr/local/bin sh
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+
+      - name: Compile bridge for Uno
+        run: |
+          mkdir -p /tmp/hw_bridge
+          cp app/src/main/assets/hw_bridge.ino /tmp/hw_bridge/hw_bridge.ino
+          arduino-cli compile --fqbn arduino:avr:uno --output-dir /tmp/out /tmp/hw_bridge
+          cp /tmp/out/hw_bridge.ino.hex app/src/main/assets/bridge_uno.hex
+
+      - name: Build debug APK
+        run: gradle assembleDebug --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: HardwareStudio-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
