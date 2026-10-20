@@ -33,7 +33,7 @@ fun HwApp(vm: HwViewModel = viewModel()) {
         containerColor = androidx.compose.ui.graphics.Color.Transparent,
         modifier = Modifier.background(AppBackground),
         bottomBar = {
-            NavigationBar(containerColor = androidx.compose.ui.graphics.Color(0xCC0B1020)) {
+            NavigationBar(containerColor = androidx.compose.ui.graphics.Color(0xF2FFFFFF)) {
                 TABS.forEachIndexed { i, t ->
                     NavigationBarItem(
                         selected = tab == i,
@@ -61,7 +61,7 @@ fun HwApp(vm: HwViewModel = viewModel()) {
 fun Title(t: String, sub: String) {
     Column(Modifier.padding(vertical = 12.dp)) {
         Text(t, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-        Text(sub, fontSize = 13.sp, color = androidx.compose.ui.graphics.Color(0xFF9AA4C0))
+        Text(sub, fontSize = 13.sp, color = MutedText)
     }
 }
 
@@ -163,7 +163,7 @@ fun CodeTab(vm: HwViewModel, openAi: () -> Unit) {
             BasicTextField(
                 value = vm.code,
                 onValueChange = { vm.code = it },
-                textStyle = TextStyle(color = androidx.compose.ui.graphics.Color(0xFFE8ECF8), fontFamily = FontFamily.Monospace, fontSize = 13.sp),
+                textStyle = TextStyle(color = CodeText, fontFamily = FontFamily.Monospace, fontSize = 13.sp),
                 cursorBrush = SolidColor(Aqua),
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
             )
@@ -174,7 +174,7 @@ fun CodeTab(vm: HwViewModel, openAi: () -> Unit) {
         }
         Text(
             "Note: .ino ko .hex banane ke liye PC (EXE app) ya cloud compile chahiye. Hex file ban jaye to Device tab se upload karo.",
-            fontSize = 11.sp, color = androidx.compose.ui.graphics.Color(0xFF9AA4C0)
+            fontSize = 11.sp, color = MutedText
         )
         Spacer(Modifier.height(4.dp))
     }
